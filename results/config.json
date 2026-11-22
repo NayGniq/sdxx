@@ -1,0 +1,13 @@
+{
+  "epochs": 15,
+  "per_class": 1000,
+  "rates": [
+    0.001,
+    0.0003
+  ],
+  "threads": 4,
+  "seed": 42,
+  "out": "results",
+  "mindspore": "2.6.0",
+  "batch": 64
+}

@@ -1,0 +1,11 @@
+{
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "machine": "arm64",
+  "device": "CPU",
+  "threads": 4,
+  "mindspore": "2.6.0",
+  "numpy": "1.26.4",
+  "batch": 1,
+  "warmup": 30,
+  "timed_images": 300
+}
