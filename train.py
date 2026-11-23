@@ -2,6 +2,8 @@
 import argparse
 import csv
 import json
+import os
+import stat
 import time
 from pathlib import Path
 
@@ -29,6 +31,53 @@ def predict(model, images, mode="full", k=49, seed=0, batch=64):
 
 def configure(threads):
     ms.set_context(mode=ms.GRAPH_MODE, device_target="CPU", runtime_num_threads=threads)
+
+
+def make_training_step(model, rate):
+    optimizer = nn.AdamWeightDecay(model.trainable_params(), learning_rate=rate, weight_decay=0.01)
+    criterion = nn.SoftmaxCrossEntropyWithLogits(sparse=True, reduction="mean")
+
+    def loss_fn(blocks, ids, targets):
+        return criterion(model(blocks, ids), targets)
+
+    gradient = ms.value_and_grad(loss_fn, None, optimizer.parameters)
+
+    @ms.jit
+    def step(blocks, ids, targets):
+        loss, grads = gradient(blocks, ids, targets)
+        return ms.ops.depend(loss, optimizer(grads))
+
+    return step
+
+
+def train_epoch(model, step, images, labels, order, batch=64, mode="full", epoch=1):
+    """Train on every example once, alternating input sizes for mixed training."""
+    if mode not in ("full", "mixed"):
+        raise ValueError(f"Unknown training mode {mode}")
+    model.set_train(True)
+    total_loss = 0.0
+    full_batches = checkerboard_batches = 0
+    for i, offset in enumerate(range(0, len(order), batch)):
+        indices = order[offset:offset + batch]
+        if mode == "mixed" and (i + epoch - 1) % 2:
+            tensors = inputs(images[indices], "checkerboard", 25)
+            checkerboard_batches += 1
+        else:
+            tensors = inputs(images[indices])
+            full_batches += 1
+        loss = step(*tensors, ms.Tensor(labels[indices]))
+        total_loss += float(loss.asnumpy()) * len(indices)
+    model.set_train(False)
+    return total_loss / len(order), full_batches, checkerboard_batches
+
+
+def save_best_checkpoint(model, path):
+    temp = path.with_name("staging.ckpt")
+    ms.save_checkpoint(model, str(temp))
+    if os.name == "nt" and path.exists():
+        # MindSpore marks saved checkpoints read-only on Windows.
+        path.chmod(stat.S_IREAD | stat.S_IWRITE)
+    temp.replace(path)
 
 
 def main():
@@ -60,39 +109,20 @@ def main():
             ms.set_seed(args.seed)
             rng = np.random.default_rng(args.seed)
             model = FashionViT()
-            optimizer = nn.AdamWeightDecay(model.trainable_params(), learning_rate=rate, weight_decay=0.01)
-            criterion = nn.SoftmaxCrossEntropyWithLogits(sparse=True, reduction="mean")
-
-            def loss_fn(blocks, ids, targets):
-                return criterion(model(blocks, ids), targets)
-
-            gradient = ms.value_and_grad(loss_fn, None, optimizer.parameters)
-
-            @ms.jit
-            def step(blocks, ids, targets):
-                loss, grads = gradient(blocks, ids, targets)
-                return ms.ops.depend(loss, optimizer(grads))
+            step = make_training_step(model, rate)
 
             for epoch in range(1, args.epochs + 1):
-                model.set_train(True)
                 start = time.perf_counter()
-                total_loss = 0.0
                 order = rng.permutation(train)
-                for offset in range(0, len(order), 64):
-                    indices = order[offset:offset + 64]
-                    loss = step(*inputs(images[indices]), ms.Tensor(labels[indices]))
-                    total_loss += float(loss.asnumpy()) * len(indices)
-                model.set_train(False)
+                loss, _, _ = train_epoch(model, step, images, labels, order)
                 accuracy = float(np.mean(predict(model, images[val]) == labels[val]))
-                row = [rate, epoch, total_loss / len(order), accuracy, time.perf_counter() - start]
+                row = [rate, epoch, loss, accuracy, time.perf_counter() - start]
                 history.writerow(row)
                 file.flush()
                 print("lr=%g epoch=%d loss=%.4f val=%.4f seconds=%.1f" % tuple(row), flush=True)
                 if accuracy > best:
                     best = accuracy
-                    temp = args.out / "staging.ckpt"
-                    ms.save_checkpoint(model, str(temp))
-                    temp.replace(args.out / "best.ckpt")
+                    save_best_checkpoint(model, args.out / "best.ckpt")
                     winner = dict(rate=rate, epoch=epoch, validation_accuracy=accuracy)
                     (args.out / "best.json").write_text(json.dumps(winner, indent=2))
 

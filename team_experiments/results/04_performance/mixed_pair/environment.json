@@ -1,0 +1,36 @@
+{
+  "platform": "Windows-10-10.0.26200-SP0",
+  "processor": "AMD64 Family 26 Model 68 Stepping 0, AuthenticAMD",
+  "python": "3.10.5",
+  "mindspore": "2.6.0",
+  "numpy": "1.26.4",
+  "checkpoint_sha256": "da5facc3c0ad4954334803fd3920fc869973b0b30b0db5d2d1be3e612ab95fee",
+  "device": "CPU",
+  "threads": 4,
+  "timing_batch": 1,
+  "accuracy_batch": 64,
+  "images_per_round": 300,
+  "warmups_per_condition": 30,
+  "independent_processes": 5,
+  "image_seed": 2026,
+  "mask_seed": 17,
+  "case_order": [
+    [
+      "full",
+      49
+    ],
+    [
+      "checkerboard",
+      25
+    ]
+  ],
+  "rotation_offsets": [
+    0,
+    1,
+    0,
+    1,
+    0
+  ],
+  "timed_source": "official test set; original indices in timings.csv",
+  "aggregation": "median over 5 round-specific statistics; speedups paired by round"
+}

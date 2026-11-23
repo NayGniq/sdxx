@@ -1,0 +1,22 @@
+{
+  "modes": [
+    "full",
+    "mixed"
+  ],
+  "epochs": 15,
+  "rate": 0.0003,
+  "optimizer": "AdamWeightDecay",
+  "weight_decay": 0.01,
+  "batch": 64,
+  "seed": 42,
+  "device": "CPU",
+  "threads": 4,
+  "mindspore": "2.6.0",
+  "numpy": "1.26.4",
+  "split": "results\\split.npz",
+  "split_sha256": "33f64c2a5f22fe1fe2410ac6d29d27e558730404775156057903c6eaca529c8c",
+  "train_n": 10000,
+  "validation_n": 6000,
+  "initial_parameter_sha256": "e8984d29c1e1328da96bc5e81a7f2c48d8746405b57818b9ed4bd1fd2a153570",
+  "selection": "max mean validation accuracy on full49 and checkerboard25; earliest tie"
+}

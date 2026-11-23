@@ -114,6 +114,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, default=ROOT / "results")
     parser.add_argument("--threads", type=int, default=4)
+    parser.add_argument("--coverage-validation", action="store_true",
+                        help="Compare 25-patch layouts on the validation split and write coverage_validation.csv")
     args = parser.parse_args()
     configure(args.threads)
     download()
@@ -128,6 +130,19 @@ def main():
     train_images, train_labels = load("train")
     with np.load(args.out / "split.npz") as saved:
         val_ids = saved["validation"]
+    if args.coverage_validation:
+        rows = []
+        val_images, val_labels = train_images[val_ids], train_labels[val_ids]
+        cases = [case for case in CASES if case[1] in (25, 49)] + [("checkerboard", 25, 0)]
+        for mode, k, seed in cases:
+            pred = predict(model, val_images, mode, k, seed)
+            correct = int(np.count_nonzero(pred == val_labels))
+            row = dict(mode=mode, k=k, seed=seed, correct=correct, total=len(pred),
+                       accuracy=correct / len(pred))
+            rows.append(row)
+            print(row, flush=True)
+        write_rows(args.out / "coverage_validation.csv", rows)
+        return
     validation = []
     for mode, k in [("full", 49), ("energy", 25), ("energy", 35)]:
         pred = predict(model, train_images[val_ids], mode, k)

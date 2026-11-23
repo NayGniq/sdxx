@@ -1,0 +1,32 @@
+{
+  "rule": "Among 25-patch methods, rank by mean validation accuracy descending, then by mean validation macro F1 descending, then by mode name ascending. Random policies use the unweighted mean of three seed-specific metrics.",
+  "modes": [
+    "full",
+    "random",
+    "center",
+    "energy",
+    "checkerboard",
+    "region_random",
+    "region_energy"
+  ],
+  "seeds": [
+    17,
+    29,
+    43
+  ],
+  "region_edges": [
+    0,
+    1,
+    3,
+    4,
+    6,
+    7
+  ],
+  "sha256": {
+    "best.ckpt": "1be1dbe5205ff34ee4f0dc731b6d566f4637c3080cb53e39b243cb0acb203ccf",
+    "split.npz": "33f64c2a5f22fe1fe2410ac6d29d27e558730404775156057903c6eaca529c8c"
+  },
+  "threads": 4,
+  "mindspore": "2.6.0",
+  "numpy": "1.26.4"
+}

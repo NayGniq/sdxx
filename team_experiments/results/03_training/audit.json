@@ -1,0 +1,20 @@
+{
+  "full": {
+    "mode": "full",
+    "initial_parameter_sha256": "e8984d29c1e1328da96bc5e81a7f2c48d8746405b57818b9ed4bd1fd2a153570",
+    "best_epoch": 14,
+    "best_score": 0.8180000000000001,
+    "full_batches": 2355,
+    "checker_batches": 0,
+    "optimizer_steps": 2355
+  },
+  "mixed": {
+    "mode": "mixed",
+    "initial_parameter_sha256": "e8984d29c1e1328da96bc5e81a7f2c48d8746405b57818b9ed4bd1fd2a153570",
+    "best_epoch": 14,
+    "best_score": 0.83225,
+    "full_batches": 1178,
+    "checker_batches": 1177,
+    "optimizer_steps": 2355
+  }
+}

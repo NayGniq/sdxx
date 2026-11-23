@@ -1,0 +1,12 @@
+{
+  "rule": "Among 25-patch methods, rank by mean validation accuracy descending, then by mean validation macro F1 descending, then by mode name ascending. Random policies use the unweighted mean of three seed-specific metrics.",
+  "selected": {
+    "mode": "checkerboard",
+    "k": 25,
+    "runs": 1,
+    "accuracy": 0.7946666666666666,
+    "accuracy_sd": 0.0,
+    "macro_f1": 0.7956618164789927,
+    "macro_f1_sd": 0.0
+  }
+}

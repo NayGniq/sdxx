@@ -25,6 +25,15 @@ MIRRORS = (
 NAMES = ["T-shirt/top", "Trouser", "Pullover", "Dress", "Coat", "Sandal",
          "Shirt", "Sneaker", "Bag", "Ankle boot"]
 
+# Both axes use strip widths 1, 2, 1, 2, 1. Padding repeats the last index so
+# every region can be scored in one gather without adding a new candidate.
+REGION_EDGES = (0, 1, 3, 4, 6, 7)
+_grid = np.arange(49).reshape(7, 7)
+_regions = [_grid[top:bottom, left:right].ravel()
+            for top, bottom in zip(REGION_EDGES, REGION_EDGES[1:])
+            for left, right in zip(REGION_EDGES, REGION_EDGES[1:])]
+REGION_CANDIDATES = np.stack([np.pad(ids, (0, 4 - len(ids)), mode="edge") for ids in _regions])
+
 
 def valid(path, checksum):
     return path.is_file() and hashlib.md5(path.read_bytes()).hexdigest() == checksum
@@ -92,6 +101,21 @@ def select(blocks, mode="full", k=49, rng=None):
         ids = np.broadcast_to(np.arange(49), (batch, 49))
     elif mode == "center":
         ids = np.broadcast_to(np.arange(49).reshape(7, 7)[1:6, 1:6].ravel(), (batch, 25))
+    elif mode == "checkerboard":
+        if k != 25:
+            raise ValueError("The 7x7 checkerboard retains exactly 25 patches")
+        # On a grid with odd width, even raster indices alternate in both axes.
+        ids = np.broadcast_to(np.arange(0, 49, 2), (batch, 25))
+    elif mode in ("region_energy", "region_random"):
+        if k != 25:
+            raise ValueError("The 5x5 region grid retains exactly 25 patches")
+        if mode == "region_energy":
+            scores = np.square(blocks).sum(axis=2)
+        else:
+            # Drawing by image keeps the stream identical for any batch size.
+            scores = rng.random((batch, 49))
+        winners = scores[:, REGION_CANDIDATES].argmax(axis=2)
+        ids = np.sort(REGION_CANDIDATES[np.arange(25), winners], axis=1)
     else:
         if mode == "energy":
             scores = np.square(blocks).sum(axis=2)

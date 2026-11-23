@@ -1,0 +1,4 @@
+condition,samples,correct,accuracy,predicted_bag,non_bag,false_bag,full_correct,full_wrong,new_errors,corrected,new_errors_to_bag
+full49,6000,5048,0.8413333333333334,604,5400,35,5048,952,0,0,0
+energy25,6000,1757,0.29283333333333333,4311,5400,3730,5048,952,3353,62,2934
+checkerboard25,6000,4768,0.7946666666666666,665,5400,99,5048,952,464,184,48
